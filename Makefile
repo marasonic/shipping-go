@@ -1,7 +1,7 @@
 .PHONY: build setup check-go init-go
 
 build:
-	go build -o api .
+	go build -o api ./cmd/main.go
 
 setup: check-go init-go
 
