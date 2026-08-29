@@ -1,0 +1,50 @@
+# The workflow name shown in the GitHub Actions tab.
+name: CI Checks
+
+# Run CI whenever main changes and before changes are merged into main.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Grant the workflow only read access to the repository contents.
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build App
+    # Use GitHub's latest Ubuntu-hosted virtual machine.
+    runs-on: ubuntu-latest
+    steps:
+    # Make the repository files available to the remaining steps.
+    - name: Check out code
+      uses: actions/checkout@v4
+
+    # Install the Go version declared in go.mod.
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version-file: go.mod
+        check-latest: true
+
+    # Invoke the Makefile target that compiles the API binary.
+    - name: Build
+      run: make build
+
+    # Put the binary in a dedicated directory for artifact upload.
+    - name: Stage artifact
+      run: |
+        mkdir artifacts
+        cp api artifacts/
+
+    # Retain the compiled API binary for download or deployment after the workflow.
+    - name: Upload API artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: api
+        # Upload just the binary, rather than all workspace files.
+        path: artifacts/api
+        # Fail clearly if a preceding step did not produce the binary.
+        if-no-files-found: error
